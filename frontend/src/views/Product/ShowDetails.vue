@@ -15,13 +15,13 @@
         <div class="d-flex flex-row justify-content-between">
           <div class="input-group col-md-3 col-4 p-0">
             <div class="input-group-prepend">
-              <span class="input-group-text">Quantity</span>
+              <span class="input-group-text">Menge</span>
             </div>
             <input type="number" class="form-control" v-model="quantity">
           </div>
           <div class="input-group col-md-3 col-4 p-0">
             <button id="add-to-cart-button" class="btn" @click="addToCart">
-              Add to Cart
+              zu Warenkorb
             </button>
           </div>
         </div>
@@ -39,7 +39,7 @@
           class="btn mr-3 p-1 py-0"
           @click="addToWishList()"
         >
-          {{ wishListString }}
+          <font-awesome-icon :icon="wishListString" />
         </button>
       </div>
     </div>
@@ -49,26 +49,47 @@
 <script>
 import axios from 'axios'
 const sweetalert = require("sweetalert");
+import VueJwtDecode from 'vue-jwt-decode'
+
+import { cartClient } from '../../api/cartApi';
 
 export default {
   name: 'ShowDetails',
 
-  props: ['baseURL','products', 'categories'],
+  props: ['baseURL'],
 
   data(){
     return{
       product: {},
       category: {},
-      wishListString: "Add to wishlist",
-      quantity: 1
+      wishListString: "heart",
+      quantity: 1,
+      username: null,
+      token: null
     }
   },
 
   mounted(){
-    this.id = this.$route.params.id;
-    this.product = this.products.find((product) => product.id == this.id)
-    this.category = this.categories.find((category) => category.id == this.product.categoryId)
-    this.token = localStorage.getItem("token")
+    setTimeout(()=>{
+      this.id = this.$route.params.id;
+      this.product = this.products.find((product) => product.id == this.id)
+      this.category = this.categories.find((category) => category.id == this.product.categoryId)
+      this.token = localStorage.getItem("keycloakToken")
+      if(this.token){
+        const decode_token = VueJwtDecode.decode(this.token)
+        this.username = decode_token.preferred_username
+      }
+    }, 100)
+  },
+
+  computed:{
+    categories(){
+      return this.$store.getters["category/categories"]
+    },
+
+    products(){
+      return this.$store.getters["product/products"]
+    },
   },
 
   methods: {
@@ -105,15 +126,10 @@ export default {
         productId : this.id,
         quantity: this.quantity
       }
-      await axios.post(`${this.baseURL}cart/add?token=${this.token}`, requestBody)
-        .then(()=>{
-          sweetalert({
-            text: "Product added in cart",
-            icon: "success"
-          })
-          this.$emit("fetchData")
-        })
-        .catch(err => console.log(err))
+
+      await cartClient.add(requestBody, this.token).then(() => {
+        this.$emit("fetchData")
+      })
     }
   }
 }
@@ -126,6 +142,7 @@ export default {
 
 #wishlist-button{
   background-color: #b9b9b9;
+  padding: 10px !important;
 }
 
 #add-to-cart-button{

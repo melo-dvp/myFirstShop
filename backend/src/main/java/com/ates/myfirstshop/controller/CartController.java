@@ -25,6 +25,7 @@ public class CartController {
     @Autowired
     private AuthenticationService authenticationService;
 
+
     @PostMapping("/add")
     public ResponseEntity<ApiResponse> addToCart(@RequestBody AddToCartDto addToCartDto, @RequestParam("token") String token){
 
@@ -35,6 +36,7 @@ public class CartController {
 
         return new ResponseEntity<>(new ApiResponse(true, "added to cart"), HttpStatus.CREATED);
     }
+
 
     @GetMapping("/getAll")
     public ResponseEntity<CartDto> getCartItems(@RequestParam("token") String token){
@@ -64,6 +66,5 @@ public class CartController {
         cartService.deleteAllCartItems(user);
         return new ResponseEntity<>(new ApiResponse(true, "All Items has been removed"), HttpStatus.OK);
     }
-
 
 }

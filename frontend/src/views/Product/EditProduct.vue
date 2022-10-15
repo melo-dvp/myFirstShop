@@ -2,7 +2,7 @@
   <div class="container">
     <div class="row">
       <div class="col-12 text-center">
-        <h4 class="pt-3">Edit Product</h4>
+        <h4 class="pt-3">Produkt bearbeiten</h4>
       </div>
     </div>
     <div class="row">
@@ -10,7 +10,7 @@
       <div class="col-6">
         <form v-if="product">
            <div class="form-group">
-              <label> Category</label>
+              <label>Kategorie</label>
               <select class="form-control" v-model="product.categoryId" required>
                   <option v-for="category of categories"
                           :key="category.id"
@@ -19,23 +19,42 @@
               </select>
           </div>
           <div class="form-group">
-            <label>Product Name</label>
+            <label>Name</label>
             <input type="text" class="form-control" v-model="product.name" required/>
           </div>
           <div class="form-group">
-            <label>Description</label>
+            <label>Beschreibung</label>
             <input type="text" class="form-control" v-model="product.description" required/>
           </div>
           <div class="form-group">
-            <label>Image URL</label>
+            <label>Bild Url</label>
             <input type="text" class="form-control" v-model="product.imageUrl" required/>
           </div>
           <div class="form-group">
-            <label>Price</label>
+            <label>Preis</label>
             <input type="text" class="form-control" v-model="product.price" required/>
           </div>
-          <button type="button" class="btn btn-primary" @click="editProduct">Submit</button>
         </form>
+        <button type="button" class="btn btn-primary" @click="editProduct">Aktuallisieren</button>
+        <button class="btn btn-danger" style="float: right;" data-toggle="modal" data-target="#deleteDialog"><font-awesome-icon icon="trash" /></button>
+        <!-- The Modal -->
+        <div class="modal" id="deleteDialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+
+              <div class="modal-header" v-if="product">
+                <h4 class="modal-title">Möchten Sie die Kategorie "{{ product.name }}" wirklich löschen?</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal" @click="deleteProduct()">Ja</button>
+              </div>
+
+            </div>
+          </div>
+        </div>
       </div>
       <div class="col-3"></div>
     </div>
@@ -43,8 +62,7 @@
 </template>
 
 <script>
-const axios = require("axios");
-const sweetalert = require("sweetalert");
+import { productClient } from '../../api/productApi'
 
 export default {
   name: "EditProduct",
@@ -60,23 +78,19 @@ export default {
 
   methods:{
     async editProduct(){
-      await axios({
-        method: 'post',
-        url: `${this.baseURL}product/update/${this.id}`,
-        data: JSON.stringify(this.product),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }).then(()=>{
+      await productClient.update(this.product).then(()=>{
         this.$emit("fetchData")
-        sweetalert({
-          text: `Product '${this.product.name}' updated successfully`,
-          icon: 'success'
-        })
         this.$router.push({name: 'Product'})
-      }).catch(err => {
-        console.log(err)
-      })
+      }).catch((err) => productClient.errorHandling(err.response))
+    },
+
+    async deleteProduct(){
+      await productClient.delete(this.id).then(() => {
+        this.$emit("fetchData")
+        this.$router.push({name: 'Product'})
+      }).catch((err) => {
+        productClient.errorHandling(err.response)
+      });
     }
   },
 

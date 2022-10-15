@@ -1,29 +1,33 @@
 package com.ates.myfirstshop.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
-@Table(name="category")
+@Table(name="category_new")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Category {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
-    @Column(name="category_name")
-    private @NotNull String categoryName;
+    private String categoryName;
 
-    @Column(name="description")
-    private @NotNull String description;
+    private String description;
 
-    @Column(name="imageUrl")
-    private @NotNull String imageUrl;
+    @Lob
+    @Column(columnDefinition = "MEDIUMBLOB")
+    private String imageUrl;
 
+    @OneToOne
+    @JsonIgnore
+    @JoinColumn(name = "image_id")
+    FileUpload fileUpload;
 }

@@ -8,7 +8,7 @@
       <p class="card-text">{{ product.description }}</p>
       <p class="card-text">${{ product.price }}</p>
       <router-link :to="{name: 'EditProduct', params: {id: product.id}}" v-show="$route.name == 'Product'">
-        <button class="btn btn-primary">Edit</button>
+        <button class="btn btn-primary" data-toggle="tooltip" title="bearbeiten"><font-awesome-icon icon="pencil" /></button>
       </router-link>
     </div>
   </div>

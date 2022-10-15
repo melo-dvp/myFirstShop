@@ -5,14 +5,19 @@
     :categories="categories"
     :products="products"
     @fetchData="fetchData"
+    @resetCartCount="resetCartCount"
   />
   <Footer/>
 </template>
 
 <script>
-import axios from 'axios';
 import Navbar from './components/Navbar.vue'
 import Footer from './components/Footer.vue'
+import VueJwtDecode from 'vue-jwt-decode'
+
+import { categoryClient } from './api/categoryApi';
+import { productClient } from './api/productApi';
+import { cartClient } from './api/cartApi';
 
 export default {
   name: 'App',
@@ -24,37 +29,49 @@ export default {
 
   data(){
     return{
-      baseURL: "http://localhost:8080/",
-      products: null,
-      categories: null,
+      baseURL: process.env.VUE_APP_BACKEND_BASE_URL,
       token: null,
-      cartCount: 0
+      username: null,
     }
   },
 
   mounted(){
-    this.token = localStorage.getItem("token")
-    this.fetchData();
+    setTimeout(()=>{
+      this.token = localStorage.getItem("keycloakToken")
+      if(this.token){
+        const decode_token = VueJwtDecode.decode(this.token)
+        this.username = decode_token.preferred_username
+      }
+      this.fetchData();
+    }, 100)
+  },
+
+  computed: {
+    categories(){
+      return this.$store.getters["category/categories"]
+    },
+
+    products(){
+      return this.$store.getters["product/products"]
+    },
+
+    cartCount(){
+      const cartItems = this.$store.getters["cart/cartItems"]
+      return cartItems.length
+    },
   },
 
   methods:{
     async fetchData(){
-      await axios.get(this.baseURL + "category/getAll")
-      .then(res =>{
-        this.categories = res.data
-      }).catch((err) => console.log("err", err));
+      await categoryClient.getAll()
 
-      await axios.get(this.baseURL + "product/getAll")
-      .then(res => {
-        this.products = res.data
-      }).catch(err => console.log("err", err))
+      await productClient.getAll()
 
       // fetch cart item if token is present
       if(this.token){
-        await axios.get(`${this.baseURL}cart/getAll?token=${this.token}`).then(res => {
-          const result = res.data
-          this.cartCount = result.cartItems.length
-        }).catch(err => console.log(err))
+        await cartClient.getAllCarts(this.token).catch(err => {
+          this.cartClient.errorHandling(err.response)
+        })
       }
     },
 

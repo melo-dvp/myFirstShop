@@ -20,32 +20,32 @@ export default {
     return{
       stripeAPIToken: "pk_test_51LDrDeGIB2TGYGGKukxLFYt5ZzJoMFcAM8VwZq69kL4rRvsHRORjcS3FSBwPEJ23UdrCNPHkX2XRW4RHZlbuTa1E00ljQ9Upnd",
       stripe: "",
-      token: null,
-      checkoutArray: []
+      checkoutArray: [],
     }
   },
 
   mounted(){
-    this.token = localStorage.getItem("token")
     this.stripe = window.Stripe(this.stripeAPIToken);
     this.getAllItems()
+  },
+
+  computed: {
+    cartItems(){
+      return this.$store.getters["cart/cartItems"]
+    },
   },
 
   methods: {
 
     getAllItems(){
-      axios.get(`${this.baseURL}cart/getAll?token=${this.token}`).then(res => {
-        let products = res.data
-        for(let i = 0; i < products.cartItems.length; i++){
-          this.checkoutArray.push({
-            price: products.cartItems[i].product.price,
-            quantity: products.cartItems[i].quantity,
-            productName: products.cartItems[i].product.name,
-            productId: products.cartItems[i].product.id,
-          })
-        }
-
-      }).catch(err => console.log(err))
+      for(let item of this.cartItems){
+        this.checkoutArray.push({
+          price: item.product.price,
+          quantity: item.quantity,
+          productName: item.product.name,
+          productId: item.id
+        })
+      }
     },
 
     goToCheckout(){

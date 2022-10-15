@@ -16,10 +16,11 @@ public class ProductDto {
     private Integer id;
 
     private @NotNull String name;
-    private @NotNull String imageUrl;
     private @NotNull double price;
     private @NotNull String description;
     private @NotNull Integer categoryId;
+    private @NotNull byte[] imageUrl;
+    private @NotNull FileUploadDto fileUploadDto;
 
 
 }

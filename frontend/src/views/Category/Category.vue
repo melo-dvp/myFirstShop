@@ -2,8 +2,10 @@
   <div class="container">
     <div class="row">
       <div class="text-center col-12 mb-4">
-        <h3 class="pt-3">Our Categories</h3>
-        <button type="button" class="btn btn-outline-primary text-right" @click="newCategory">Add new Category</button>
+        <h3 class="pt-3">Unsere Kategorien</h3>
+        <button type="button" class="btn btn-outline-primary text-right" @click="newCategory">
+          Neue Kategorie <font-awesome-icon icon="plus" />
+        </button>
       </div>
     </div>
     <div class="row">
@@ -29,12 +31,6 @@ export default {
   },
 
   props: ['categories'],
-
-  data(){
-    return{
-      baseURL: "http://localhost:8080",
-    }
-  },
 
   methods:{
     newCategory(){

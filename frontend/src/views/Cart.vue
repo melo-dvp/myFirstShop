@@ -3,7 +3,7 @@
     <div class="row">
       <div class="col-12 text-center">
         <h3 class="pt-3">
-          Shopping Cart
+          Warenkorb
         </h3>
       </div>
     </div>
@@ -31,32 +31,40 @@
             </router-link>
           </h6>
           <p class="mb-0 font-weight-bold" id="item-price">
-            $ {{ cartItem.product.price }} per unit
+            $ {{ cartItem.product.price }} pro Einheit
           </p>
-          <p class="mb-0" style="float: left">
-            Quantity: {{ cartItem.quantity }}
-          </p>
+          <ul class="list-style">
+            <li>
+              Menge: {{ cartItem.quantity }}
+            </li>
+            <li>
+              Gesamt: <span class="font-weight-bold">
+                $ {{ cartItem.product.price * cartItem.quantity }}
+              </span>
+            </li>
+            <li>
+              <button class="btn btn-danger mt-3" @click="deleteProduct(cartItem.id)" data-toggle="tooltip" title="löschen">
+                <font-awesome-icon icon="trash"/>
+              </button>
+            </li>
+          </ul>
         </div>
-        <p class="mb-0">
-          Total: <span class="font-weight-bold">
-            $ {{ cartItem.product.price * cartItem.quantity }}
-          </span>
-        </p>
-        <button class="btn btn-danger mt-3" @click="deleteProduct(cartItem.id)">delete Product</button>
       </div>
       <div class="col-2"></div>
       <div class="col-12"><hr/></div>
     </div>
     <div class="total-cost pt-2 text-right">
-      <h5>Total: $ {{ totalCost }}</h5>
-      <button type="button" class="btn btn-primary confirm" @click="checkout">Confirm order</button>
+      <h5>Gesamt: $ {{ totalCost }}</h5>
+      <button type="button" class="btn btn-primary confirm" @click="checkout">Bestellung bestätigen</button>
     </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
 const sweetalert = require("sweetalert");
+import VueJwtDecode from 'vue-jwt-decode'
+
+import { cartClient } from '../api/cartApi';
 
 export default {
   name: "Cart",
@@ -65,15 +73,29 @@ export default {
 
   data(){
     return{
-      cartItems: [],
       token: null,
-      totalCost: 0
+      username: null
     }
   },
 
   mounted(){
-    this.token = localStorage.getItem("token")
-    this.listCartItems()
+    setTimeout(()=>{
+      this.token = localStorage.getItem("keycloakToken")
+      if(this.token){
+        const decode_token = VueJwtDecode.decode(this.token)
+        this.username = decode_token.preferred_username
+      }
+      this.listCartItems()
+    }, 100)
+  },
+
+  computed:{
+    cartItems(){
+      return this.$store.getters["cart/cartItems"]
+    },
+    totalCost(){
+      return this.$store.getters["cart/totalCost"]
+    }
   },
 
   methods:{
@@ -85,11 +107,10 @@ export default {
         })
         return
       }
-      await axios.get(`${this.baseURL}cart/getAll?token=${this.token}`).then(res => {
-        const result = res.data
-        this.cartItems = result.cartItems
-        this.totalCost = result.totalCost
-      }).catch(err => console.log(err))
+
+      await cartClient.getAllCarts(this.token).catch(err => {
+        this.cartClient.errorHandling(err.response)
+      })
     },
 
     async deleteProduct(id){
@@ -100,14 +121,10 @@ export default {
         })
         return
       }
-      await axios.delete(`${this.baseURL}cart/delete/${id}?token=${this.token}`).then(()=>{
-        sweetalert({
-          text: "Product deleted successfully",
-          icon: "success"
-        })
+      await cartClient.delete(id, this.token).then(() => {
         this.listCartItems()
         this.$emit("fetchData")
-      }).catch(err => console.log(err))
+      }).catch(err => cartClient.errorHandling(err.response))
     },
 
     checkout(){
@@ -121,5 +138,10 @@ export default {
 h4, h5 {
   color: #484848;
   font-size: 700;
+}
+
+.list-style{
+  list-style: none;
+  padding-left: 0px;
 }
 </style>

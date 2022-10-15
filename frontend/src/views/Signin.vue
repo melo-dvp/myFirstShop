@@ -26,19 +26,20 @@
 <script>
 import axios from 'axios'
 const sweetalert = require("sweetalert");
-
+// deprecated
 export default {
   name: "Signin",
 
   data(){
     return{
-      baseURL: 'http://localhost:8080/',
+      baseURL: process.env.VUE_APP_BACKEND_BASE_URL,
       email: null,
       password: null
     }
   },
 
   methods:{
+    // deprecated
     async signin(e){
       e.preventDefault();
 

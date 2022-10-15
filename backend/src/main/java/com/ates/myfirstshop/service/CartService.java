@@ -8,6 +8,7 @@ import com.ates.myfirstshop.model.Cart;
 import com.ates.myfirstshop.model.Product;
 import com.ates.myfirstshop.model.User;
 import com.ates.myfirstshop.repository.CartRepo;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ public class CartService {
 
     @Autowired
     private ProductService productService;
+
 
     public void addToCart(AddToCartDto addToCartDto, User user) {
 
@@ -76,7 +78,6 @@ public class CartService {
 
         cartRepo.delete(cart);
     }
-
     public void deleteAllCartItems(User user){
         List<Cart> cartList = cartRepo.findAllByUserOrderByCreatedDateDesc(user);
         for(Cart cart: cartList){

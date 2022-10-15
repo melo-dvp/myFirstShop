@@ -5,7 +5,9 @@
 </template>
 
 <script>
-import axios from "axios"
+import VueJwtDecode from 'vue-jwt-decode'
+
+import { cartClient } from "../../api/cartApi"
 
 export default {
   name: "Success",
@@ -14,18 +16,23 @@ export default {
 
   data(){
     return{
-      token: null
+      token: null,
+      username: null
     }
   },
 
   mounted(){
-    this.token = localStorage.getItem("token")
+    this.token = localStorage.getItem("keycloakToken")
+    if(this.token){
+      const decode_token = VueJwtDecode.decode(this.$keycloak.token)
+      this.username = decode_token.preferred_username
+    }
     this.deleteAllCarts()
   },
 
   methods: {
     async deleteAllCarts(){
-      await axios.delete(`${this.baseURL}cart/deleteAll?token=${this.token}`)
+      await cartClient.deleteAll(this.token)
     }
   }
 }

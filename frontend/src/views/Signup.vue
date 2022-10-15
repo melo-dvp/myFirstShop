@@ -8,36 +8,40 @@
     <div class="row">
       <div class="col-12 justify-content-center d-flex pt-3">
         <div id="signup-div" class="flex-item border">
-          <h2 class="pt-4 pl-4">Create Account</h2>
+          <h2 class="pt-4 pl-4">Benutzer erstellen</h2>
           <form @submit="signup" class="pt-4 pl-4 pr-4">
             <div class="form-group">
-              <label for="Email">Email</label>
+              <label for="Email">Benutzername</label>
+              <input v-model="username" type="text" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="Email">E-Mail</label>
               <input v-model="email" type="email" class="form-control" required>
             </div>
             <div class="form-row">
               <div class="col">
                 <div class="form-group">
-                  <label>First Name</label>
+                  <label>Vorname</label>
                   <input v-model="firstName" type="text" class="form-control" required>
                 </div>
               </div>
               <div class="col">
                 <div class="form-group">
-                  <label>Last Name</label>
+                  <label>Nachname</label>
                   <input v-model="lastName" type="text" class="form-control" required>
                 </div>
               </div>
             </div>
             <div class="form-group">
-              <label for="Password">Password</label>
+              <label for="Password">Passwort</label>
               <input v-model="password" type="password" class="form-control" required>
             </div>
             <div class="form-group">
-              <label for="Password">Confirm password</label>
+              <label for="Password">Passwort wiederholen</label>
               <input v-model="passwordConfirm" type="password" class="form-control" required>
             </div>
 
-            <button class="btn btn-primary mt-2">Create Account</button>
+            <button class="btn btn-primary mt-2">Benutzer erstellen</button>
           </form>
         </div>
       </div>
@@ -47,22 +51,32 @@
 </template>
 
 <script>
-import axios from 'axios'
 const sweetalert = require("sweetalert");
+import { keycloakClient } from '../api/keycloakApi'
 
 export default {
   name: "Signup",
 
-  //props: ['baseURL'],
-
   data(){
     return{
+      username: null,
       email: null,
       firstName: null,
       lastName: null,
       password: null,
       passwordConfirm: null,
-      baseURL: 'http://localhost:8080/'
+      token: null
+    }
+  },
+
+  mounted(){
+    this.token = localStorage.getItem("keycloakToken")
+    if(this.token){
+      sweetalert({
+        text: 'Melde dich vorher ab, um einen neuen Benutzer zu erstellen',
+        icon: 'error'
+      })
+      this.$router.push({name: 'Home'})
     }
   },
 
@@ -72,24 +86,23 @@ export default {
       if(this.password === this.passwordConfirm){
         // call signup api
         const user = {
-          email: this.email,
+          userName: this.username,
+          emailId: this.email,
           firstName : this.firstName,
           lastName: this.lastName,
           password: this.password
         }
 
-        await axios.post(`${this.baseURL}user/signup`, user)
-          .then(() => {
-            this.$router.replace('/')
-            sweetalert({
-              text: 'User signup successful, please login',
-              icon: 'success'
-            })
-          })
-          .catch(err => console.log(err))
+        await keycloakClient.add(user).then(() => {
+          this.$router.replace('/')
+        }).catch(err => {
+          keycloakClient.errorHandling(err.response)
+          this.password = ""
+          this.passwordConfirm = ""
+        })
       }else{
         sweetalert({
-          text: 'password dont match',
+          text: 'Beide Passwörter stimmen nicht überein',
           icon: 'error'
         })
       }

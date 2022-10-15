@@ -2,7 +2,7 @@
   <div class="container">
     <div class="row">
       <div class="text-center col-12 mb-4">
-        <h3 class="pt-3">Add Category</h3>
+        <h3 class="pt-3">Kategorie hinzufügen</h3>
       </div>
     </div>
     <div class="row">
@@ -10,18 +10,19 @@
       <div class="col-6">
         <form>
           <div class="form-group">
-            <label>Name</label>
+            <label>Name *</label>
             <input type="text" class="form-control" v-model="categoryName">          
           </div>
           <div class="form-group">
-            <label>Description</label>
+            <label>Beschreibung *</label>
             <textarea type="text" class="form-control" v-model="description"/>          
           </div>
-          <div class="form-group">
-            <label>Image</label>
-            <input type="text" class="form-control" v-model="imageUrl">          
+          <div>
+            <FileUploadDragDrop @uploadImage="onImageUpload($event)"/>
           </div>
-          <button type="button" class="btn btn-primary" @click="addCategory">Submit</button>
+          <div class="btn-save">
+            <button type="button" class="btn btn-primary" @click="addCategory">Speichern</button>
+          </div>
         </form>
       </div>
       <div class="col-3"></div>
@@ -30,56 +31,66 @@
 </template>
 
 <script>
-const axios = require("axios");
+import FileUploadDragDrop from '../../components/FileUpload/FileUploadDragDrop.vue'
+
+import { categoryClient } from "../../api/categoryApi";
 const sweetalert = require("sweetalert");
 
 export default {
   name: "AddCategory",
 
+  components: {
+    FileUploadDragDrop
+  },
+
   data(){
     return{
       categoryName: "",
       description: "",
-      imageUrl: ""
+      formData: null,
+      file: null
     }
   },
 
   methods:{
-    addCategory(){
-      const newCategory = {
-        categoryName: this.categoryName,
-        description: this.description,
-        imageUrl: this.imageUrl
+    async addCategory(){
+      if(
+        this.categoryName.length === 0 ||
+        this.description.length === 0 ||
+        this.file === null
+      ){
+        sweetalert({
+          text: `Bitte fülle alle Pflichtfelder aus!`,
+          icon: 'warning'
+        })
+        return
       }
 
-      const baseURL = "http://localhost:8080"
+      this.formData.append("categoryName", this.categoryName)
+      this.formData.append("description", this.description)
 
-      axios({
-        method: 'post',
-        url: `${baseURL}/category/create`,
-        data: JSON.stringify(newCategory),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }).then(()=>{
+
+      await categoryClient.create(this.formData).then(()=> {
         this.$emit("fetchData")
-        sweetalert({
-          text: 'Category added successfully',
-          icon: 'success'
-        })
         this.categoryName = ''
         this.description = ''
-        this.imageUrl = ''
         this.$router.push({name: 'Category'})
-      }).catch(err => {
-        console.log(err)
       })
+    },
 
+    onImageUpload(event){
+      this.file = event[0].file
+      this.formData = new FormData()
+      this.formData.append("file", this.file)
     }
+   
   }
 }
 </script>
 
 <style scoped>
-
+  .btn-save{
+    display: flex;
+    justify-content: center;
+  }
 </style>

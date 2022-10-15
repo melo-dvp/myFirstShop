@@ -2,7 +2,7 @@
   <div class="container">
     <div class="row">
       <div class="text-center col-12 mb-4">
-        <h3 class="pt-3">Add New Product</h3>
+        <h3 class="pt-3">Neues Produkt hinzufügen</h3>
       </div>
     </div>
     <div class="row">
@@ -10,7 +10,7 @@
       <div class="col-6">
         <form>
           <div class="form-group">
-              <label>Category</label>
+              <label>Kategorie</label>
               <select class="form-control" v-model="categoryId" required>
                   <option v-for="category in categories" :key="category.id"
                           :value="category.id">{{ category.categoryName }}</option>
@@ -21,18 +21,18 @@
             <input type="text" class="form-control" v-model="productName">          
           </div>
           <div class="form-group">
-            <label>Description</label>
+            <label>Beschreibung</label>
             <textarea type="text" class="form-control" v-model="description"/>          
           </div>
           <div class="form-group">
-            <label>Image</label>
+            <label>Bild Url</label>
             <input type="text" class="form-control" v-model="imageUrl">          
           </div>
           <div class="form-group">
-            <label>Price</label>
+            <label>Preis</label>
             <input type="number" class="form-control" v-model="price"/>
           </div>
-          <button type="button" class="btn btn-primary" @click="addProduct">Submit</button>
+          <button type="button" class="btn btn-primary" @click="addProduct">Speichern</button>
         </form>
       </div>
       <div class="col-3"></div>
@@ -41,8 +41,7 @@
 </template>
 
 <script>
-const axios = require("axios");
-const sweetalert = require("sweetalert");
+import { productClient } from "../../api/productApi";
 
 export default {
   name: "AddProduct",
@@ -60,7 +59,7 @@ export default {
   },
 
   methods: {
-    addProduct(){
+    async addProduct(){
       const newProduct = {
         name: this.productName,
         description: this.description,
@@ -69,29 +68,14 @@ export default {
         categoryId: this.categoryId
       }
 
-      const baseURL = "http://localhost:8080"
-
-      axios({
-        method: 'post',
-        url: `${baseURL}/product/add`,
-        data: JSON.stringify(newProduct),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }).then(()=>{
+      await productClient.add(newProduct).then(()=>{
         this.$emit("fetchData")
-        sweetalert({
-          text: 'Product added successfully',
-          icon: 'success'
-        })
         this.productName = "",
         this.description = "",
         this.imageUrl = "",
         this.price = "",
         this.categoryId = 0
         this.$router.push({name: 'Product'})
-      }).catch(err => {
-        console.log(err)
       })
     }
   }
